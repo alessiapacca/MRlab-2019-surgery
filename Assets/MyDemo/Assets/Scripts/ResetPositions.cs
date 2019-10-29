@@ -57,7 +57,7 @@ public class ResetPositions : MonoBehaviour
 
         Transform worldTransform = GameObject.Find("BoneCollection").transform;
 
-        for (int i = 0; i < 6; i++)
+        for (int i = 1; i < 6; i++)
         {
             bones[i].transform.localPosition = originalTransform[i].pos;
             bones[i].transform.localRotation = originalTransform[i].rotate;
