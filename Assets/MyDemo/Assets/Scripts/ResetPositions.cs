@@ -20,7 +20,7 @@ public class ResetPositions : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        for (int i = 1; i <= 6; i++)
+        for (int i = 2; i <= 6; i++)
         {
             GameObject t = GameObject.Find("Bone_" + i);
             bones.Add(t);
@@ -55,9 +55,9 @@ public class ResetPositions : MonoBehaviour
         //Debug.Log("Num of Bones transform, " + transformOfBones.Count);
         Debug.Log("Num of Bonesbones, " + bones.Count);
 
-        Transform worldTransform = GameObject.Find("BoneCollection").transform;
+        //Transform worldTransform = GameObject.Find("BoneCollection").transform;
 
-        for (int i = 1; i < 6; i++)
+        for (int i = 0; i < originalTransform.Count; i++)
         {
             bones[i].transform.localPosition = originalTransform[i].pos;
             bones[i].transform.localRotation = originalTransform[i].rotate;
