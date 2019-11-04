@@ -116,7 +116,7 @@ MonoBehaviour:
         Quaternion: {x: 0, y: 0, z: 0, w: 0}
         AudioClip: {fileID: 0}
         Animation: {fileID: 0}
-      ShaderName: 
+      ShaderName: Mixed Reality Toolkit/Standard
     - Name: Offset
       Type: 6
       Values:
@@ -215,7 +215,7 @@ MonoBehaviour:
         Quaternion: {x: 0, y: 0, z: 0, w: 0}
         AudioClip: {fileID: 0}
         Animation: {fileID: 0}
-      ShaderName: 
+      ShaderName: Mixed Reality Toolkit/Standard
     - Name: Color
       Type: 2
       Values:
