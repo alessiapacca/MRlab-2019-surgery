@@ -20,9 +20,9 @@ public class ResetPositions : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        for (int i = 2; i <= 6; i++)
+        for (int i = 1; i <= 5; i++)
         {
-            GameObject t = GameObject.Find("Bone_" + i);
+            GameObject t = GameObject.Find("Frac_" + i);
             bones.Add(t);
             Transform tr = t.GetComponent<Transform>();
             TransformInfo ti = new TransformInfo
@@ -36,11 +36,6 @@ public class ResetPositions : MonoBehaviour
         }
         Debug.Log("Init: #bones, " + bones.Count);
         Debug.Log("Init: #transforms, " + originalTransform.Count);
-
-    }
-
-    void Update()
-    {
 
     }
 
