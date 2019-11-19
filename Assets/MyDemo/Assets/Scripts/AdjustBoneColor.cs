@@ -23,7 +23,7 @@ public class AdjustBoneColor : MonoBehaviour
 
     [Header("Color Shifting Speed")]
     [Range(1f, 3f)]
-    public float periodOfOpacityChange = 3f;
+    public float periodOfOpacityChange = 2.0f;
     private float magnitude;
 
     private bool onHold = false;
@@ -32,6 +32,7 @@ public class AdjustBoneColor : MonoBehaviour
     private float holdBeginPhase;
 
     private Material _material;
+    private Material _adjustedMaterial;
 
     private ColorMode mode;
 
@@ -42,6 +43,12 @@ public class AdjustBoneColor : MonoBehaviour
         _material.SetColor(_ColorID, defaultColor);
 
         magnitude = (maxOpacity - minOpacity) * 0.5f;
+
+        string name = gameObject.name;
+
+        _adjustedMaterial = GameObject.Find(name + "_aligned").GetComponentInChildren<Renderer>().material;
+
+        _adjustedMaterial.SetColor(_ColorID, defaultColor);
     }
 
     void Update()
@@ -56,15 +63,22 @@ public class AdjustBoneColor : MonoBehaviour
             {
                 float time = Time.time;
                 float alpha = magnitude * Mathf.Cos(2 * Mathf.PI / periodOfOpacityChange * (time - holdBeginTime) + holdBeginPhase) + magnitude + minOpacity;
-                Debug.Log("Current Alpha: " + alpha);
+                //Debug.Log("Current Alpha: " + alpha);
                 _currentColor.a = alpha;
                 _material.SetColor(_ColorID, _currentColor);
+                _adjustedMaterial.SetColor(_ColorID, _currentColor);
             }
         }
         else
         {
             // do nothing
         }
+    }
+
+    public void ResetColor()
+    {
+        _material.SetColor(_ColorID, defaultColor);
+        _adjustedMaterial.SetColor(_ColorID, defaultColor);
     }
 
     public void OnSelect()
@@ -105,6 +119,11 @@ public class AdjustBoneColor : MonoBehaviour
         _material.SetColor(_ColorID, _currentColor);
         _material.SetFloat(_EmissionEnableID, 1.0f);
         _material.SetColor(_EmissionColorID, onHoldEmissionColor);
+
+        _adjustedMaterial.SetColor(_ColorID, _currentColor);
+        _adjustedMaterial.SetFloat(_EmissionEnableID, 1.0f);
+        _adjustedMaterial.SetColor(_EmissionColorID, onHoldEmissionColor);
+
         Debug.Log("OnSelect:" + _currentColor);
     }
 
@@ -113,6 +132,9 @@ public class AdjustBoneColor : MonoBehaviour
         _currentColor = _lastColor;
         _material.SetColor(_ColorID, _currentColor);
         _material.SetFloat(_EmissionEnableID, 0.0f);
+
+        _adjustedMaterial.SetColor(_ColorID, _currentColor);
+        _adjustedMaterial.SetFloat(_EmissionEnableID, 0.0f);
         Debug.Log("ExitSelect" + _currentColor);
     }
 

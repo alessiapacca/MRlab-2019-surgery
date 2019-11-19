@@ -13,16 +13,15 @@ public class ResetPositions : MonoBehaviour
     }
 
     private static List<GameObject> bones = new List<GameObject>();
-    //private static List<Transform> transformOfBones = new List<Transform>();
 
     private static List<TransformInfo> originalTransform = new List<TransformInfo>();
 
     // Start is called before the first frame update
     void Start()
     {
-        for (int i = 1; i <= 5; i++)
+        for (int i = 2; i <= GlobalController.numberOfBones; i++)
         {
-            GameObject t = GameObject.Find("Frac_" + i);
+            GameObject t = GameObject.Find("Bone_" + i);
             bones.Add(t);
             Transform tr = t.GetComponent<Transform>();
             TransformInfo ti = new TransformInfo

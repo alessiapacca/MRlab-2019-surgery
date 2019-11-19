@@ -24,7 +24,7 @@ public class ShowCTScans : MonoBehaviour
     {
         PinchSlider slider = GameObject.Find("PinchSlider").GetComponent<PinchSlider>();
         int value = (int) (slider.SliderValue * 2000) + 3;
-        Debug.Log("Update, " + value);
+        //Debug.Log("Update, " + value);
 
         if (value != currentValue)
         {
