@@ -5,6 +5,7 @@ using System.IO;
 using TMPro;
 
 public enum ColorMode { Select, Edit };
+public enum ScaleMode { Half, Original, Double };
 
 public class GlobalController : MonoBehaviour
 {
@@ -21,6 +22,7 @@ public class GlobalController : MonoBehaviour
     private static List<GameObject> adjustedBones = new List<GameObject>();
     private static List<TransformInfo> originalTransformAdjusted = new List<TransformInfo>();
 
+
     // Colors and opacities
     public static ColorMode gColorMode { get; set; }
     
@@ -28,6 +30,9 @@ public class GlobalController : MonoBehaviour
 
     // Slider
     private static GameObject slider;
+
+    // Scale
+    public static ScaleMode gScaleMode { get; set; }
 
     // Start is called before the first frame update
     void Start()
@@ -60,6 +65,7 @@ public class GlobalController : MonoBehaviour
         Debug.Log("Number of bones loaded: " + numberOfBones);
         Debug.Log("Number of adjusted bones loaded: " + numberOfAdjustedBones);
 
+        // init bone references
         for (int i = 1; i <= numberOfBones; i++)
         {
             GameObject t = GameObject.Find("Bone_" + i);
@@ -88,15 +94,25 @@ public class GlobalController : MonoBehaviour
             originalTransformAdjusted.Add(ti);
         }
 
+        // color mode init
         gColorMode = ColorMode.Select;
 
+        // slider enable/disable
         slider = GameObject.Find("PinchSlider");
+
+        // scale functions
+        gScaleMode = ScaleMode.Original;
+        
     }
 
     public void ResetPositions()
     {
         Debug.Log("Reset Botton Pressed");
         Debug.Log(originalTransform.Count);
+
+        Vector3 scale = originalTransform[0].scale;
+        bones[0].transform.localScale = (gScaleMode == ScaleMode.Original) ? scale :
+            (gScaleMode == ScaleMode.Double) ? scale * 2 : scale * 0.5f;
 
         for (int i = 1; i < originalTransform.Count; i++)
         {
@@ -149,9 +165,9 @@ public class GlobalController : MonoBehaviour
 
     public void ShowOrHideSlider()
     {
-        TextMeshPro[] texts = slider.GetComponentsInChildren<TextMeshPro>();
+        TextMeshPro[] texts = GameObject.Find("ShowSlider").GetComponentsInChildren<TextMeshPro>();
 
-        if (slider.activeSelf)
+        if (slider.activeInHierarchy)
         {
             slider.SetActive(false);
             foreach (TextMeshPro tmp in texts)
@@ -179,6 +195,47 @@ public class GlobalController : MonoBehaviour
                 tmp.text = "Edit Opacity";
             else
                 tmp.text = "Fix Opacity";
+        }
+    }
+
+    public void ChangeScaleMode()
+    {
+        TextMeshPro[] texts = GameObject.Find("ScaleButton").GetComponentsInChildren<TextMeshPro>();
+        Vector3 scale = originalTransform[0].scale;
+        switch (gScaleMode)
+        {
+            case ScaleMode.Half:
+                {
+                    gScaleMode = ScaleMode.Original;
+                    bones[0].transform.localScale = scale;
+                    foreach(TextMeshPro tmp in texts)
+                    {
+                        tmp.text = "Zoom: 2x";
+                    }
+                    break;
+                }
+            case ScaleMode.Original:
+                {
+                    gScaleMode = ScaleMode.Double;
+                    bones[0].transform.localScale = scale * 2f;
+                    foreach (TextMeshPro tmp in texts)
+                    {
+                        tmp.text = "Zoom: 0.5x";
+                    }
+                    break;
+                }
+            case ScaleMode.Double:
+                {
+                    gScaleMode = ScaleMode.Half;
+                    bones[0].transform.localScale = scale * 0.5f;
+                    foreach (TextMeshPro tmp in texts)
+                    {
+                        tmp.text = "Zoom: 1x";
+                    }
+                    break;
+                }
+            default:
+                break;
         }
     }
 }

@@ -77,6 +77,7 @@ public class AdjustBoneColor : MonoBehaviour
 
     public void ResetColor()
     {
+        _currentColor = defaultColor;
         _material.SetColor(_ColorID, defaultColor);
         _adjustedMaterial.SetColor(_ColorID, defaultColor);
     }
