@@ -9,17 +9,16 @@ using UnityEngine;
 
 public class CTReader : MonoBehaviour {
     public TextAsset ctobj;
+    public ComputeShader typeConverter;
     NRRD nrrd;
 
     Texture2D tex;
     Gradient grad;
 
     void Start() {
-        Debug.Log("load nrrd");
         nrrd = new NRRD(ctobj);
-        Debug.Log("done loading nrrd");
         tex = new Texture2D(nrrd.sizes[0], nrrd.sizes[1], TextureFormat.RGBA32, false);
-        GameObject.Find("Quad1").GetComponent<Renderer>().material.mainTexture = tex;
+        GetComponent<Renderer>().material.mainTexture = tex;
 
         grad = new Gradient();
         grad.SetKeys(
@@ -32,20 +31,15 @@ public class CTReader : MonoBehaviour {
             int z = (int) (pose.Position.z * nrrd.sizes[2]) % nrrd.sizes[2];
             if (z < 0) z += nrrd.sizes[2];
 
-            var slice = new float[nrrd.sizes[0] * nrrd.sizes[1]];
-            Buffer.BlockCopy(nrrd.grid, z * slice.Length * sizeof(float), slice, 0, slice.Length * sizeof(float));
-
             var buf = tex.GetRawTextureData<Color32>();
-            for (int i = 0; i < slice.Length; i++) buf[i] = grad.Evaluate(slice[i]);
+            for (int i = 0; i < nrrd.sizes[0] * nrrd.sizes[1]; i++)
+                buf[i] = grad.Evaluate(nrrd.grid[nrrd.sizes[0] * nrrd.sizes[1] * z + i]);
             tex.Apply();
         }
     }
-
-
 }
 
 public class NRRD {
-
     readonly public Dictionary<String, String> headers = new Dictionary<String, String>();
     readonly public float[] grid;
 
@@ -67,19 +61,9 @@ public class NRRD {
             }
 
             if (headers["dimension"] != "3") throw new ArgumentException("NRRD is not 3D");
-            int bytelen;
-            switch (headers["type"]) {
-                case "byte": bytelen = 1; break;
-                case "short": bytelen = 2; break;
-                case "float": bytelen = 4; break;
-                case "int": bytelen = 4; break;
-                case "double": bytelen = 8; break;
-                case "long": bytelen = 8; break;
-                default: throw new ArgumentException("Unknown type: " + headers["type"]);
-            };
-            var endianMatch = true;
-            if (headers.ContainsKey("endian"))
-                endianMatch = (headers["endian"] == "little") == BitConverter.IsLittleEndian;
+            if (headers["type"] != "float") throw new ArgumentException("NRRD is not of type float");
+            if (headers["endian"] != "little") throw new ArgumentException("NRRD is not little endian");
+            if (headers["encoding"] != "gzip") throw new ArgumentException("NRRD is not gzip encoded");
 
             sizes = Array.ConvertAll(headers["sizes"].Split(), s => int.Parse(s));
             if (headers.ContainsKey("space origin"))
@@ -87,33 +71,10 @@ public class NRRD {
             if (headers.ContainsKey("space directions"))
                 directions = Array.ConvertAll(headers["space directions"].Split(), s => Array.ConvertAll(s.Substring(1, s.Length - 2).Split(','), v => float.Parse(v)));
 
-            var stream = reader.BaseStream;
-            try {
-                if (headers["encoding"] == "gzip") stream = new GZipStream(stream, CompressionMode.Decompress);
-                else if (headers["encoding"] != "raw") throw new ArgumentException("Unknown encoding: " + headers["encoding"]);
-
-                grid = new float[sizes[0] * sizes[1] * sizes[2]];
-                float maxValue = float.MinValue;
-                float minValue = float.MaxValue;
-                for (int i = 0; i < grid.Length; i++) {
-                    var buf = new byte[bytelen];
-                    stream.Read(buf, 0, bytelen);
-                    if (!endianMatch) Array.Reverse(buf);
-                    switch (headers["type"]) {
-                        case "byte": grid[i] = Convert.ToSingle(BitConverter.ToChar(buf, 0)); break;
-                        case "short": grid[i] = Convert.ToSingle(BitConverter.ToInt16(buf, 0)); break;
-                        case "float": grid[i] = Convert.ToSingle(BitConverter.ToSingle(buf, 0)); break;
-                        case "int": grid[i] = Convert.ToSingle(BitConverter.ToInt32(buf, 0)); break;
-                        case "double": grid[i] = Convert.ToSingle(BitConverter.ToDouble(buf, 0)); break;
-                        case "long": grid[i] = Convert.ToSingle(BitConverter.ToInt64(buf, 0)); break;
-                    }
-                    if (grid[i] > maxValue) maxValue = grid[i];
-                    if (grid[i] < minValue) minValue = grid[i];
-                }
-                for (int i = 0; i < grid.Length; i++) grid[i] = (grid[i] - minValue) / (maxValue - minValue);
-            } finally {
-                stream.Close();
-            }
+            var mem = new MemoryStream();
+            using (var stream = new GZipStream(reader.BaseStream, CompressionMode.Decompress)) stream.CopyTo(mem);
+            grid = new float[sizes[0] * sizes[1] * sizes[2]];
+            Buffer.BlockCopy(mem.ToArray(), 0, grid, 0, grid.Length * sizeof(float));
         }
     }
 }
