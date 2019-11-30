@@ -8,22 +8,31 @@ using System.Text;
 using UnityEngine;
 
 public class CTReader : MonoBehaviour {
-    public TextAsset ctobj;
-    public ComputeShader typeConverter;
+    public TextAsset ct;
+    public ComputeShader slicer;
+    
     NRRD nrrd;
 
+    int kernel;
+    RenderTexture rtex;
     Texture2D tex;
-    Gradient grad;
 
     void Start() {
-        nrrd = new NRRD(ctobj);
-        tex = new Texture2D(nrrd.sizes[0], nrrd.sizes[1], TextureFormat.RGBA32, false);
-        GetComponent<Renderer>().material.mainTexture = tex;
+        nrrd = new NRRD(ct);
+        kernel = slicer.FindKernel("CSMain");
+        
+        var buf = new ComputeBuffer(nrrd.data.Length, sizeof(float));
+        buf.SetData(nrrd.data);
+        slicer.SetBuffer(kernel, "data", buf);
+        slicer.SetInts("dims", nrrd.sizes);
 
-        grad = new Gradient();
-        grad.SetKeys(
-            new GradientColorKey[] { new GradientColorKey(Color.black, 0), new GradientColorKey(Color.white, 1) },
-            new GradientAlphaKey[] { new GradientAlphaKey(1, 0), new GradientAlphaKey(1, 1) });
+        rtex = new RenderTexture(nrrd.sizes[0], nrrd.sizes[1], 1);
+        rtex.enableRandomWrite = true;
+        rtex.Create();
+        slicer.SetTexture(kernel, "slice", rtex);
+
+        tex = new Texture2D(rtex.width, rtex.height);
+        GetComponent<Renderer>().material.mainTexture = tex;
     }
 
     void Update() {
@@ -31,9 +40,11 @@ public class CTReader : MonoBehaviour {
             int z = (int) (pose.Position.z * nrrd.sizes[2]) % nrrd.sizes[2];
             if (z < 0) z += nrrd.sizes[2];
 
-            var buf = tex.GetRawTextureData<Color32>();
-            for (int i = 0; i < nrrd.sizes[0] * nrrd.sizes[1]; i++)
-                buf[i] = grad.Evaluate(nrrd.grid[nrrd.sizes[0] * nrrd.sizes[1] * z + i]);
+            slicer.SetInt("z", z);
+            slicer.Dispatch(kernel, (rtex.width + 7) / 8, (rtex.height + 7) / 8, 1);
+
+            RenderTexture.active = rtex;
+            tex.ReadPixels(new Rect(0, 0, rtex.width, rtex.height), 0, 0);
             tex.Apply();
         }
     }
@@ -41,7 +52,7 @@ public class CTReader : MonoBehaviour {
 
 public class NRRD {
     readonly public Dictionary<String, String> headers = new Dictionary<String, String>();
-    readonly public float[] grid;
+    readonly public float[] data;
 
     readonly public int[] sizes;
     readonly public float[] origin = { 0, 0, 0 };
@@ -73,8 +84,8 @@ public class NRRD {
 
             var mem = new MemoryStream();
             using (var stream = new GZipStream(reader.BaseStream, CompressionMode.Decompress)) stream.CopyTo(mem);
-            grid = new float[sizes[0] * sizes[1] * sizes[2]];
-            Buffer.BlockCopy(mem.ToArray(), 0, grid, 0, grid.Length * sizeof(float));
+            data = new float[sizes[0] * sizes[1] * sizes[2]];
+            Buffer.BlockCopy(mem.ToArray(), 0, data, 0, data.Length * sizeof(float));
         }
     }
 }

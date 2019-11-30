@@ -1,0 +1,14 @@
+﻿#pragma kernel CSMain
+
+StructuredBuffer<float> data;
+uint3 dims;
+
+RWTexture2D<float4> slice;
+
+uint z;
+
+[numthreads(8, 8, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID) {
+	uint index = id.x + id.y * dims.x + z * dims.x * dims.y;
+	slice[id.xy] = float4(data[index], data[index], data[index], 1);
+}
