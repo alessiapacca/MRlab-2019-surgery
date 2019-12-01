@@ -8,39 +8,64 @@ using System.Text;
 using UnityEngine;
 
 public class CTReader : MonoBehaviour {
+    public GameObject referenceCube;
+    public GameObject referencePlane;
     public TextAsset ct;
     public ComputeShader slicer;
-    
+
     NRRD nrrd;
 
     int kernel;
     RenderTexture rtex;
     Texture2D tex;
 
+    Transform tf;
+
     void Start() {
+        tf = referenceCube.GetComponent<Transform>();
         nrrd = new NRRD(ct);
         kernel = slicer.FindKernel("CSMain");
-        
+
+        tf.localPosition = nrrd.origin;
+        tf.localScale = Vector3.Scale(nrrd.scale, new Vector3(nrrd.dims[0], nrrd.dims[1], nrrd.dims[2]));
+
         var buf = new ComputeBuffer(nrrd.data.Length, sizeof(float));
         buf.SetData(nrrd.data);
         slicer.SetBuffer(kernel, "data", buf);
-        slicer.SetInts("dims", nrrd.sizes);
+        slicer.SetInts("dims", nrrd.dims);
 
-        rtex = new RenderTexture(nrrd.sizes[0], nrrd.sizes[1], 1);
+        rtex = new RenderTexture(512, 512, 1);
         rtex.enableRandomWrite = true;
         rtex.Create();
         slicer.SetTexture(kernel, "slice", rtex);
+        slicer.SetInts("outDims", new int[] { rtex.width, rtex.height });
 
         tex = new Texture2D(rtex.width, rtex.height);
         GetComponent<Renderer>().material.mainTexture = tex;
     }
 
     void Update() {
-        if (HandJointUtils.TryGetJointPose(TrackedHandJoint.Palm, Handedness.Right, out MixedRealityPose pose)) {
-            int z = (int) (pose.Position.z * nrrd.sizes[2]) % nrrd.sizes[2];
-            if (z < 0) z += nrrd.sizes[2];
+        if (HandJointUtils.TryGetJointPose(TrackedHandJoint.IndexKnuckle, Handedness.Right, out MixedRealityPose po1) &&
+            HandJointUtils.TryGetJointPose(TrackedHandJoint.IndexTip, Handedness.Right, out MixedRealityPose po2) &&
+            HandJointUtils.TryGetJointPose(TrackedHandJoint.PinkyKnuckle, Handedness.Right, out MixedRealityPose po3)) {
+            var p1 = tf.InverseTransformPoint(po1.Position);
+            var p2 = tf.InverseTransformPoint(po2.Position);
+            var p3 = tf.InverseTransformPoint(po3.Position);
+            var plane = new Plane(p1, p2, p3);
 
-            slicer.SetInt("z", z);
+            var orig = plane.ClosestPointOnPlane(Vector3.zero);
+            var dy = (p2 - p1).normalized;
+            var dx = Vector3.Cross(dy, plane.normal);
+            dy /= rtex.height / 2;
+            dx /= rtex.width / 2;
+
+            var rp = referencePlane.GetComponent<Transform>();
+            rp.up = plane.normal;
+            rp.localPosition = p2;
+
+            slicer.SetFloats("orig", new float[] { orig.x, orig.y, orig.z });
+            slicer.SetFloats("dx", new float[] { dx.x, dx.y, dx.z });
+            slicer.SetFloats("dy", new float[] { dy.x, dy.y, dy.z });
             slicer.Dispatch(kernel, (rtex.width + 7) / 8, (rtex.height + 7) / 8, 1);
 
             RenderTexture.active = rtex;
@@ -53,13 +78,10 @@ public class CTReader : MonoBehaviour {
 public class NRRD {
     readonly public Dictionary<String, String> headers = new Dictionary<String, String>();
     readonly public float[] data;
+    readonly public int[] dims;
 
-    readonly public int[] sizes;
-    readonly public float[] origin = { 0, 0, 0 };
-    readonly public float[][] directions = {
-        new float[] { 1, 0, 0 },
-        new float[] { 0, 1, 0 },
-        new float[] { 0, 0, 1 } };
+    readonly public Vector3 origin = new Vector3(0, 0, 0);
+    readonly public Vector3 scale = new Vector3(1, 1, 1);
 
     public NRRD(TextAsset asset) {
         using (var reader = new BinaryReader(new MemoryStream(asset.bytes))) {
@@ -76,15 +98,22 @@ public class NRRD {
             if (headers["endian"] != "little") throw new ArgumentException("NRRD is not little endian");
             if (headers["encoding"] != "gzip") throw new ArgumentException("NRRD is not gzip encoded");
 
-            sizes = Array.ConvertAll(headers["sizes"].Split(), s => int.Parse(s));
-            if (headers.ContainsKey("space origin"))
-                origin = Array.ConvertAll(headers["space origin"].Substring(1, headers["space origin"].Length - 2).Split(','), v => float.Parse(v));
-            if (headers.ContainsKey("space directions"))
-                directions = Array.ConvertAll(headers["space directions"].Split(), s => Array.ConvertAll(s.Substring(1, s.Length - 2).Split(','), v => float.Parse(v)));
+            dims = Array.ConvertAll(headers["sizes"].Split(), s => int.Parse(s));
+            if (headers.ContainsKey("space origin")) {
+                var origin = Array.ConvertAll(headers["space origin"].Substring(1, headers["space origin"].Length - 2).Split(','), v => float.Parse(v));
+                this.origin = new Vector3(origin[0], origin[1], origin[2]);
+            }
+            if (headers.ContainsKey("space directions")) {
+                var scale = Array.ConvertAll(headers["space directions"].Split(), s => Array.ConvertAll(s.Substring(1, s.Length - 2).Split(','), v => float.Parse(v)));
+                if (scale[0][0] == 0 || scale[1][1] == 0 || scale[2][2] == 0) throw new ArgumentException("NRRD has 0 scale value");
+                if (scale[0][1] != 0 || scale[1][0] != 0 || scale[2][0] != 0 ||
+                    scale[0][2] != 0 || scale[1][2] != 0 || scale[2][1] != 0) throw new ArgumentException("NRRD is not axis-aligned");
+                this.scale = new Vector3(scale[0][0], scale[1][1], scale[2][2]);
+            }
 
             var mem = new MemoryStream();
             using (var stream = new GZipStream(reader.BaseStream, CompressionMode.Decompress)) stream.CopyTo(mem);
-            data = new float[sizes[0] * sizes[1] * sizes[2]];
+            data = new float[dims[0] * dims[1] * dims[2]];
             Buffer.BlockCopy(mem.ToArray(), 0, data, 0, data.Length * sizeof(float));
         }
     }
