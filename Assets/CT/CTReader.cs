@@ -56,8 +56,11 @@ public class CTReader : MonoBehaviour {
             var orig = plane.ClosestPointOnPlane(Vector3.zero);
             var dy = (p2 - p1).normalized;
             var dx = Vector3.Cross(dy, plane.normal);
-            dy /= rtex.height / 2;
-            dx /= rtex.width / 2;
+
+            var scale = tf.localScale.normalized;
+            scale = new Vector3(1 / scale.x, 1 / scale.y, 1 / scale.z);
+            dy.Scale(scale / rtex.height);
+            dx.Scale(scale / rtex.width);
 
             var rp = referencePlane.GetComponent<Transform>();
             rp.up = plane.normal;
