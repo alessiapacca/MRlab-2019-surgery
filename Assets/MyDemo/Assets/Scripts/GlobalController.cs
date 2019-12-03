@@ -29,7 +29,7 @@ public class GlobalController : MonoBehaviour
     public static int numberOfBones = 0, numberOfAdjustedBones = 1;
 
     // Slider
-    private static GameObject slider;
+    private static GameObject slider, slider2;
 
     // Scale
     public static ScaleMode gScaleMode { get; set; }
@@ -99,6 +99,7 @@ public class GlobalController : MonoBehaviour
 
         // slider enable/disable
         slider = GameObject.Find("PinchSlider");
+        slider2 = GameObject.Find("PinchSliderHor");
 
         // scale functions
         gScaleMode = ScaleMode.Original;
@@ -110,10 +111,6 @@ public class GlobalController : MonoBehaviour
         Debug.Log("Reset Botton Pressed");
         Debug.Log(originalTransform.Count);
 
-        Vector3 scale = originalTransform[0].scale;
-        bones[0].transform.localScale = (gScaleMode == ScaleMode.Original) ? scale :
-            (gScaleMode == ScaleMode.Double) ? scale * 2 : scale * 0.5f;
-
         for (int i = 1; i < originalTransform.Count; i++)
         {
             bones[i].transform.localPosition = originalTransform[i].pos;
@@ -124,6 +121,16 @@ public class GlobalController : MonoBehaviour
         adjustedBones[0].transform.localPosition = originalTransformAdjusted[0].pos;
         adjustedBones[0].transform.localRotation = originalTransformAdjusted[0].rotate;
         adjustedBones[0].transform.localScale = originalTransformAdjusted[0].scale;
+
+
+        Vector3 scale = originalTransform[0].scale;
+        Vector3 localScale = (gScaleMode == ScaleMode.Original) ? scale :
+            (gScaleMode == ScaleMode.Double) ? scale * 2 : scale * 0.5f;
+        bones[0].transform.localScale = localScale;
+
+        //Vector3 pos = originalTransform[0].pos;
+        //Vector3 oriPosition = new Vector3(pos.x / localScale.x, pos.y / localScale.y, pos.z / localScale.z);
+        //bones[0].transform.localPosition = oriPosition;
 
         //for(int i = 0; i<originalTransformAdjusted.Count; i++)
         //{
@@ -167,17 +174,22 @@ public class GlobalController : MonoBehaviour
     {
         TextMeshPro[] texts = GameObject.Find("ShowSlider").GetComponentsInChildren<TextMeshPro>();
 
+
         if (slider.activeInHierarchy)
         {
             slider.SetActive(false);
+            slider2.SetActive(false);
             foreach (TextMeshPro tmp in texts)
             {
                 tmp.text = "Show Slider";
             }
+            ResetPositions();
+            ResetColorForAll();
         }
         else
         {
             slider.SetActive(true);
+            slider2.SetActive(true);
             foreach (TextMeshPro tmp in texts)
             {
                 tmp.text = "Hide Slider";
@@ -202,12 +214,16 @@ public class GlobalController : MonoBehaviour
     {
         TextMeshPro[] texts = GameObject.Find("ScaleButton").GetComponentsInChildren<TextMeshPro>();
         Vector3 scale = originalTransform[0].scale;
+        //Vector3 pos = bones[0].transform.localPosition;
+        //Vector3 scaledPosition = new Vector3(pos.x / scale.x, pos.y / scale.y, pos.z / scale.z);
+        //bones[0].transform.localPosition = scaledPosition;
         switch (gScaleMode)
         {
             case ScaleMode.Half:
                 {
                     gScaleMode = ScaleMode.Original;
                     bones[0].transform.localScale = scale;
+
                     foreach(TextMeshPro tmp in texts)
                     {
                         tmp.text = "Zoom: 2x";

@@ -568,11 +568,11 @@ PlayerSettings:
   metroCertificateNotAfter: 803f3026a19dd601
   metroApplicationDescription: Template_3D
   wsaImages: {}
-  metroTileShortName: Surgery
+  metroTileShortName: MR Surgery
   metroTileShowName: 0
-  metroMediumTileShowName: 0
-  metroLargeTileShowName: 0
-  metroWideTileShowName: 0
+  metroMediumTileShowName: 1
+  metroLargeTileShowName: 1
+  metroWideTileShowName: 1
   metroSupportStreamingInstall: 0
   metroLastRequiredScene: 0
   metroDefaultTileSize: 1

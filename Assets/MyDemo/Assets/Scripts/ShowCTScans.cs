@@ -12,6 +12,7 @@ using Microsoft.MixedReality.Toolkit.UI;
 public class ShowCTScans : MonoBehaviour
 {
     int currentValue = 1;
+    public GameObject pinchslider;
 
     // Start is called before the first frame update
     void Start()
@@ -22,7 +23,8 @@ public class ShowCTScans : MonoBehaviour
     // Update is called once per frame
     public void Update()
     {
-        PinchSlider slider = GameObject.Find("PinchSlider").GetComponent<PinchSlider>();
+        //PinchSlider pinchslider = GameObject.Find("PinchSlider").GetComponent<PinchSlider>();
+        PinchSlider slider = pinchslider.GetComponent<PinchSlider>();
         int value = (int) (slider.SliderValue * 2000) + 3;
         //Debug.Log("Update, " + value);
 
