@@ -5,6 +5,7 @@ using System.IO;
 using TMPro;
 
 public enum ColorMode { Select, Edit };
+public enum ScaleMode { Half, Original, Double };
 
 public class GlobalController : MonoBehaviour
 {
@@ -21,13 +22,17 @@ public class GlobalController : MonoBehaviour
     private static List<GameObject> adjustedBones = new List<GameObject>();
     private static List<TransformInfo> originalTransformAdjusted = new List<TransformInfo>();
 
+
     // Colors and opacities
     public static ColorMode gColorMode { get; set; }
     
     public static int numberOfBones = 0, numberOfAdjustedBones = 1;
 
     // Slider
-    private static GameObject slider;
+    private static GameObject slider, slider2;
+
+    // Scale
+    public static ScaleMode gScaleMode { get; set; }
 
     // Start is called before the first frame update
     void Start()
@@ -60,6 +65,7 @@ public class GlobalController : MonoBehaviour
         Debug.Log("Number of bones loaded: " + numberOfBones);
         Debug.Log("Number of adjusted bones loaded: " + numberOfAdjustedBones);
 
+        // init bone references
         for (int i = 1; i <= numberOfBones; i++)
         {
             GameObject t = GameObject.Find("Bone_" + i);
@@ -88,9 +94,16 @@ public class GlobalController : MonoBehaviour
             originalTransformAdjusted.Add(ti);
         }
 
+        // color mode init
         gColorMode = ColorMode.Select;
 
+        // slider enable/disable
         slider = GameObject.Find("PinchSlider");
+        slider2 = GameObject.Find("PinchSliderHor");
+
+        // scale functions
+        gScaleMode = ScaleMode.Original;
+        
     }
 
     public void ResetPositions()
@@ -108,6 +121,16 @@ public class GlobalController : MonoBehaviour
         adjustedBones[0].transform.localPosition = originalTransformAdjusted[0].pos;
         adjustedBones[0].transform.localRotation = originalTransformAdjusted[0].rotate;
         adjustedBones[0].transform.localScale = originalTransformAdjusted[0].scale;
+
+
+        Vector3 scale = originalTransform[0].scale;
+        Vector3 localScale = (gScaleMode == ScaleMode.Original) ? scale :
+            (gScaleMode == ScaleMode.Double) ? scale * 2 : scale * 0.5f;
+        bones[0].transform.localScale = localScale;
+
+        //Vector3 pos = originalTransform[0].pos;
+        //Vector3 oriPosition = new Vector3(pos.x / localScale.x, pos.y / localScale.y, pos.z / localScale.z);
+        //bones[0].transform.localPosition = oriPosition;
 
         //for(int i = 0; i<originalTransformAdjusted.Count; i++)
         //{
@@ -149,19 +172,24 @@ public class GlobalController : MonoBehaviour
 
     public void ShowOrHideSlider()
     {
-        TextMeshPro[] texts = slider.GetComponentsInChildren<TextMeshPro>();
+        TextMeshPro[] texts = GameObject.Find("ShowSlider").GetComponentsInChildren<TextMeshPro>();
 
-        if (slider.activeSelf)
+
+        if (slider.activeInHierarchy)
         {
             slider.SetActive(false);
+            slider2.SetActive(false);
             foreach (TextMeshPro tmp in texts)
             {
                 tmp.text = "Show Slider";
             }
+            ResetPositions();
+            ResetColorForAll();
         }
         else
         {
             slider.SetActive(true);
+            slider2.SetActive(true);
             foreach (TextMeshPro tmp in texts)
             {
                 tmp.text = "Hide Slider";
@@ -179,6 +207,51 @@ public class GlobalController : MonoBehaviour
                 tmp.text = "Edit Opacity";
             else
                 tmp.text = "Fix Opacity";
+        }
+    }
+
+    public void ChangeScaleMode()
+    {
+        TextMeshPro[] texts = GameObject.Find("ScaleButton").GetComponentsInChildren<TextMeshPro>();
+        Vector3 scale = originalTransform[0].scale;
+        //Vector3 pos = bones[0].transform.localPosition;
+        //Vector3 scaledPosition = new Vector3(pos.x / scale.x, pos.y / scale.y, pos.z / scale.z);
+        //bones[0].transform.localPosition = scaledPosition;
+        switch (gScaleMode)
+        {
+            case ScaleMode.Half:
+                {
+                    gScaleMode = ScaleMode.Original;
+                    bones[0].transform.localScale = scale;
+
+                    foreach(TextMeshPro tmp in texts)
+                    {
+                        tmp.text = "Zoom: 2x";
+                    }
+                    break;
+                }
+            case ScaleMode.Original:
+                {
+                    gScaleMode = ScaleMode.Double;
+                    bones[0].transform.localScale = scale * 2f;
+                    foreach (TextMeshPro tmp in texts)
+                    {
+                        tmp.text = "Zoom: 0.5x";
+                    }
+                    break;
+                }
+            case ScaleMode.Double:
+                {
+                    gScaleMode = ScaleMode.Half;
+                    bones[0].transform.localScale = scale * 0.5f;
+                    foreach (TextMeshPro tmp in texts)
+                    {
+                        tmp.text = "Zoom: 1x";
+                    }
+                    break;
+                }
+            default:
+                break;
         }
     }
 }
