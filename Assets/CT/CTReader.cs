@@ -12,6 +12,7 @@ public class CTReader : MonoBehaviour {
     public GameObject referencePlane;
     public TextAsset ct;
     public ComputeShader slicer;
+    public bool leftHanded;
 
     NRRD nrrd;
 
@@ -24,7 +25,7 @@ public class CTReader : MonoBehaviour {
     void Start() {
         tf = referenceCube.GetComponent<Transform>();
         nrrd = new NRRD(ct);
-        kernel = slicer.FindKernel("CSMain");
+        kernel = slicer.FindKernel("CSMain" + (leftHanded ? "L" : ""));
 
         tf.localPosition = nrrd.origin;
         tf.localScale = Vector3.Scale(nrrd.scale, new Vector3(nrrd.dims[0], nrrd.dims[1], nrrd.dims[2]));
@@ -37,7 +38,7 @@ public class CTReader : MonoBehaviour {
         rtex = new RenderTexture(512, 512, 1);
         rtex.enableRandomWrite = true;
         rtex.Create();
-        slicer.SetTexture(kernel, "slice", rtex);
+        slicer.SetTexture(kernel, "slice" + (leftHanded ? "L" : ""), rtex);
         slicer.SetInts("outDims", new int[] { rtex.width, rtex.height });
 
         tex = new Texture2D(rtex.width, rtex.height);
@@ -45,13 +46,13 @@ public class CTReader : MonoBehaviour {
     }
 
     void Update() {
-        if (HandJointUtils.TryGetJointPose(TrackedHandJoint.IndexKnuckle, Handedness.Right, out MixedRealityPose po1) &&
-            HandJointUtils.TryGetJointPose(TrackedHandJoint.IndexTip, Handedness.Right, out MixedRealityPose po2) &&
-            HandJointUtils.TryGetJointPose(TrackedHandJoint.PinkyKnuckle, Handedness.Right, out MixedRealityPose po3)) {
+        if (HandJointUtils.TryGetJointPose(TrackedHandJoint.IndexKnuckle, leftHanded ? Handedness.Left : Handedness.Right, out MixedRealityPose po1) &&
+            HandJointUtils.TryGetJointPose(TrackedHandJoint.IndexTip, leftHanded ? Handedness.Left : Handedness.Right, out MixedRealityPose po2) &&
+            HandJointUtils.TryGetJointPose(TrackedHandJoint.PinkyKnuckle, leftHanded ? Handedness.Left : Handedness.Right, out MixedRealityPose po3)) {
             var p1 = tf.InverseTransformPoint(po1.Position);
             var p2 = tf.InverseTransformPoint(po2.Position);
             var p3 = tf.InverseTransformPoint(po3.Position);
-            var plane = new Plane(p1, p2, p3);
+            var plane = leftHanded ? new Plane(p1, p3, p2) : new Plane(p1, p2, p3);
 
             var orig = plane.ClosestPointOnPlane(Vector3.zero);
             var dy = (p2 - p1).normalized;
@@ -66,9 +67,9 @@ public class CTReader : MonoBehaviour {
             rp.up = plane.normal;
             rp.localPosition = p2;
 
-            slicer.SetFloats("orig", new float[] { orig.x, orig.y, orig.z });
-            slicer.SetFloats("dx", new float[] { dx.x, dx.y, dx.z });
-            slicer.SetFloats("dy", new float[] { dy.x, dy.y, dy.z });
+            slicer.SetFloats("orig" + (leftHanded ? "L" : ""), new float[] { orig.x, orig.y, orig.z });
+            slicer.SetFloats("dx" + (leftHanded ? "L" : ""), new float[] { dx.x, dx.y, dx.z });
+            slicer.SetFloats("dy" + (leftHanded ? "L" : ""), new float[] { dy.x, dy.y, dy.z });
             slicer.Dispatch(kernel, (rtex.width + 7) / 8, (rtex.height + 7) / 8, 1);
 
             RenderTexture.active = rtex;

@@ -1,12 +1,15 @@
 #pragma kernel CSMain
+#pragma kernel CSMainL
 
 StructuredBuffer<float> data;
 uint3 dims;
 
 RWTexture2D<float4> slice;
+RWTexture2D<float4> sliceL;
 uint2 outDims;
 
 float3 orig, dx, dy;
+float3 origL, dxL, dyL;
 
 float getData(uint3 ip, uint corner) {
 	return data[(ip.x + (corner & 4)) + (ip.y + (corner & 2)) * dims.x + (ip.z + (corner & 1)) * dims.x * dims.y];
@@ -39,9 +42,27 @@ void CSMain(uint3 id : SV_DispatchThreadID) {
 	if (all(abs(p) <= float3(0.5, 0.5, 0.5))) {
 		if (any(float3(0.5, 0.5, 0.5) - abs(p) < 0.005)) {
 			slice[id.xy] = float4(1, 0, 0, 1);
-		} else {
+		}
+		else {
 			float v = interpolate(p);
 			slice[id.xy] = float4(v, v, v, 1);
 		}
-	} else slice[id.xy] = float4(0, 0, 0, 1);
+	}
+	else slice[id.xy] = float4(0, 0, 0, 1);
+}
+
+[numthreads(8, 8, 1)]
+void CSMainL(uint3 id : SV_DispatchThreadID) {
+	float3 p = origL + (int(id.x) - int(outDims.x / 2)) * dxL + (int(id.y) - int(outDims.y / 2)) * dyL;
+
+	if (all(abs(p) <= float3(0.5, 0.5, 0.5))) {
+		if (any(float3(0.5, 0.5, 0.5) - abs(p) < 0.005)) {
+			sliceL[id.xy] = float4(1, 0, 0, 1);
+		}
+		else {
+			float v = interpolate(p);
+			sliceL[id.xy] = float4(v, v, v, 1);
+		}
+	}
+	else sliceL[id.xy] = float4(0, 0, 0, 1);
 }
