@@ -1,5 +1,3 @@
-using Microsoft.MixedReality.Toolkit.Input;
-using Microsoft.MixedReality.Toolkit.Utilities;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,74 +6,48 @@ using System.Text;
 using UnityEngine;
 
 public class CTReader : MonoBehaviour {
-    public GameObject referenceCube;
-    public GameObject referencePlane;
     public TextAsset ct;
     public ComputeShader slicer;
-    public bool leftHanded;
-
-    NRRD nrrd;
 
     int kernel;
-    RenderTexture rtex;
-    Texture2D tex;
-
-    Transform tf;
 
     void Start() {
-        tf = referenceCube.GetComponent<Transform>();
-        nrrd = new NRRD(ct);
-        kernel = slicer.FindKernel("CSMain" + (leftHanded ? "L" : ""));
+        var nrrd = new NRRD(ct);
 
-        tf.localPosition = nrrd.origin;
-        tf.localScale = Vector3.Scale(nrrd.scale, new Vector3(nrrd.dims[0], nrrd.dims[1], nrrd.dims[2]));
+        GetComponent<Transform>().localPosition = nrrd.origin;
+        GetComponent<Transform>().localScale = Vector3.Scale(nrrd.scale, new Vector3(nrrd.dims[0], nrrd.dims[1], nrrd.dims[2]));
 
+        kernel = slicer.FindKernel("CSMain");
         var buf = new ComputeBuffer(nrrd.data.Length, sizeof(float));
         buf.SetData(nrrd.data);
         slicer.SetBuffer(kernel, "data", buf);
         slicer.SetInts("dims", nrrd.dims);
-
-        rtex = new RenderTexture(512, 512, 1);
-        rtex.enableRandomWrite = true;
-        rtex.Create();
-        slicer.SetTexture(kernel, "slice" + (leftHanded ? "L" : ""), rtex);
-        slicer.SetInts("outDims", new int[] { rtex.width, rtex.height });
-
-        tex = new Texture2D(rtex.width, rtex.height);
-        GetComponent<Renderer>().material.mainTexture = tex;
     }
 
-    void Update() {
-        if (HandJointUtils.TryGetJointPose(TrackedHandJoint.IndexKnuckle, leftHanded ? Handedness.Left : Handedness.Right, out MixedRealityPose po1) &&
-            HandJointUtils.TryGetJointPose(TrackedHandJoint.IndexTip, leftHanded ? Handedness.Left : Handedness.Right, out MixedRealityPose po2) &&
-            HandJointUtils.TryGetJointPose(TrackedHandJoint.PinkyKnuckle, leftHanded ? Handedness.Left : Handedness.Right, out MixedRealityPose po3)) {
-            var p1 = tf.InverseTransformPoint(po1.Position);
-            var p2 = tf.InverseTransformPoint(po2.Position);
-            var p3 = tf.InverseTransformPoint(po3.Position);
-            var plane = leftHanded ? new Plane(p1, p3, p2) : new Plane(p1, p2, p3);
+    public void Slice(Vector3 orig, Vector3 dx, Vector3 dy, Texture2D result) {
+        var rtex = new RenderTexture(result.width, result.height, 1);
+        rtex.enableRandomWrite = true;
+        rtex.Create();
+        slicer.SetTexture(kernel, "slice", rtex);
+        slicer.SetInts("outDims", new int[] { rtex.width, rtex.height });
 
-            var orig = plane.ClosestPointOnPlane(Vector3.zero);
-            var dy = (p2 - p1).normalized;
-            var dx = Vector3.Cross(dy, plane.normal);
+        slicer.SetFloats("orig", new float[] { orig.x, orig.y, orig.z });
+        slicer.SetFloats("dx", new float[] { dx.x, dx.y, dx.z });
+        slicer.SetFloats("dy", new float[] { dy.x, dy.y, dy.z });
+        slicer.Dispatch(kernel, (rtex.width + 7) / 8, (rtex.height + 7) / 8, 1);
 
-            var scale = tf.localScale.normalized;
-            scale = new Vector3(1 / scale.x, 1 / scale.y, 1 / scale.z);
-            dy.Scale(scale / rtex.height);
-            dx.Scale(scale / rtex.width);
+        RenderTexture.active = rtex;
+        result.ReadPixels(new Rect(0, 0, rtex.width, rtex.height), 0, 0);
+        result.Apply();
+    }
 
-            var rp = referencePlane.GetComponent<Transform>();
-            rp.up = plane.normal;
-            rp.localPosition = p2;
+    public Vector3 TransformWorldCoords(Vector3 p) {
+        return GetComponent<Transform>().InverseTransformPoint(p);
+    }
 
-            slicer.SetFloats("orig" + (leftHanded ? "L" : ""), new float[] { orig.x, orig.y, orig.z });
-            slicer.SetFloats("dx" + (leftHanded ? "L" : ""), new float[] { dx.x, dx.y, dx.z });
-            slicer.SetFloats("dy" + (leftHanded ? "L" : ""), new float[] { dy.x, dy.y, dy.z });
-            slicer.Dispatch(kernel, (rtex.width + 7) / 8, (rtex.height + 7) / 8, 1);
-
-            RenderTexture.active = rtex;
-            tex.ReadPixels(new Rect(0, 0, rtex.width, rtex.height), 0, 0);
-            tex.Apply();
-        }
+    public Vector3 ScaleVector(Vector3 p) {
+        var scale = GetComponent<Transform>().localScale.normalized;
+        return Vector3.Scale(p, new Vector3(1 / scale.x, 1 / scale.y, 1 / scale.z));
     }
 }
 
