@@ -3,9 +3,9 @@ using UnityEngine;
 
 public class SliderSlice : MonoBehaviour {
     public CTReader ct;
-    public PinchSlider slider;
     public int width, height;
 
+    public PinchSlider slider;
     public enum Axis { X, Y, Z };
     public Axis axis;
 

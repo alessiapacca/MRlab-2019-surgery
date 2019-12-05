@@ -318,9 +318,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ct: {fileID: 278603713}
-  slider: {fileID: 2702449244704679873}
   width: 256
   height: 256
+  slider: {fileID: 2702449244704679873}
   axis: 2
 --- !u!1 &71886136
 GameObject:
@@ -1953,9 +1953,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ct: {fileID: 278603713}
-  slider: {fileID: 1197703344}
   width: 256
   height: 256
+  slider: {fileID: 1197703344}
   axis: 0
 --- !u!1 &625006135
 GameObject:

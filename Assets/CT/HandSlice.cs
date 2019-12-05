@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class HandSlice : MonoBehaviour {
     public CTReader ct;
+    public int width, height;
+
     public bool enableReferencePlane;
     public bool leftHanded;
 
@@ -11,7 +13,7 @@ public class HandSlice : MonoBehaviour {
     GameObject referencePlane;
 
     void Start() {
-        tex = new Texture2D(512, 512);
+        tex = new Texture2D(width, height);
         GetComponent<Renderer>().material.mainTexture = tex;
     }
 
