@@ -4,10 +4,11 @@ using UnityEngine;
 
 public class HandSlice : MonoBehaviour {
     public CTReader ct;
-    public GameObject referencePlane;
+    public bool enableReferencePlane;
     public bool leftHanded;
 
     Texture2D tex;
+    GameObject referencePlane;
 
     void Start() {
         tex = new Texture2D(512, 512);
@@ -29,10 +30,14 @@ public class HandSlice : MonoBehaviour {
             dx = ct.ScaleVector(dx) / tex.width;
             dy = ct.ScaleVector(dy) / tex.height;
 
-            if (referencePlane) {
-                var rp = referencePlane.GetComponent<Transform>();
-                rp.up = plane.normal;
-                rp.localPosition = p2;
+            if (enableReferencePlane) {
+                if (!referencePlane) {
+                    referencePlane = GameObject.CreatePrimitive(PrimitiveType.Plane);
+                    referencePlane.GetComponent<Transform>().SetParent(ct.gameObject.GetComponent<Transform>());
+                    referencePlane.GetComponent<Transform>().localScale = new Vector3(0.02f, 0.02f, 0.02f);
+                }
+                referencePlane.GetComponent<Transform>().up = plane.normal;
+                referencePlane.GetComponent<Transform>().localPosition = p2;
             }
 
             ct.Slice(orig, dx, dy, tex);
