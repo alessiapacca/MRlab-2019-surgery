@@ -43,9 +43,6 @@ public class SliderSlice : MonoBehaviour {
                     break;
             }
 
-            dx = ct.ScaleVector(dx) / tex.width;
-            dy = ct.ScaleVector(dy) / tex.height;
-
             ct.Slice(orig, dx, dy, tex);
         }
     }

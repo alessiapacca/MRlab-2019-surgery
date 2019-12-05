@@ -27,8 +27,6 @@ public class HandSlice : MonoBehaviour {
             var orig = plane.ClosestPointOnPlane(Vector3.zero);
             var dy = (p2 - p1).normalized;
             var dx = Vector3.Cross(dy, plane.normal);
-            dx = ct.ScaleVector(dx) / tex.width;
-            dy = ct.ScaleVector(dy) / tex.height;
 
             if (enableReferencePlane) {
                 if (!referencePlane) {

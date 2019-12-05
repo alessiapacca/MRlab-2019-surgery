@@ -31,6 +31,11 @@ public class CTReader : MonoBehaviour {
         slicer.SetTexture(kernel, "slice", rtex);
         slicer.SetInts("outDims", new int[] { rtex.width, rtex.height });
 
+        var scale = GetComponent<Transform>().localScale.normalized;
+        scale = new Vector3(1 / scale.x, 1 / scale.y, 1 / scale.z);
+        dx = Vector3.Scale(dx, scale / rtex.width);
+        dy = Vector3.Scale(dy, scale / rtex.height);
+
         slicer.SetFloats("orig", new float[] { orig.x, orig.y, orig.z });
         slicer.SetFloats("dx", new float[] { dx.x, dx.y, dx.z });
         slicer.SetFloats("dy", new float[] { dy.x, dy.y, dy.z });
@@ -43,11 +48,6 @@ public class CTReader : MonoBehaviour {
 
     public Vector3 TransformWorldCoords(Vector3 p) {
         return GetComponent<Transform>().InverseTransformPoint(p);
-    }
-
-    public Vector3 ScaleVector(Vector3 p) {
-        var scale = GetComponent<Transform>().localScale.normalized;
-        return Vector3.Scale(p, new Vector3(1 / scale.x, 1 / scale.y, 1 / scale.z));
     }
 }
 
