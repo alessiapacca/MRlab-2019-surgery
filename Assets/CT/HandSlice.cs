@@ -29,6 +29,15 @@ public class HandSlice : MonoBehaviour {
             var p1 = ct.TransformWorldCoords(po1.Position);
             var p2 = ct.TransformWorldCoords(po2.Position);
             var p3 = ct.TransformWorldCoords(po3.Position);
+            if (p1.x < -0.5 || 0.5 < p1.x ||
+                p1.y < -0.5 || 0.5 < p1.y ||
+                p1.z < -0.5 || 0.5 < p1.z ||
+                p2.x < -0.5 || 0.5 < p2.x ||
+                p2.y < -0.5 || 0.5 < p2.y ||
+                p2.z < -0.5 || 0.5 < p2.z ||
+                p3.x < -0.5 || 0.5 < p3.x ||
+                p3.y < -0.5 || 0.5 < p3.y ||
+                p3.z < -0.5 || 0.5 < p3.z) return;
             var plane = leftHanded ? new Plane(p1, p3, p2) : new Plane(p1, p2, p3);
 
             var orig = plane.ClosestPointOnPlane(Vector3.zero);
