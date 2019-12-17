@@ -5,6 +5,7 @@ using UnityEngine;
 public class HandSlice : MonoBehaviour {
     public CTReader ct;
     public int width, height;
+    public int interval;
 
     public bool enableReferencePlane;
     public bool leftHanded;
@@ -12,12 +13,16 @@ public class HandSlice : MonoBehaviour {
     Texture2D tex;
     GameObject referencePlane;
 
+    int curInterval = 0;
+
     void Start() {
         tex = new Texture2D(width, height);
         GetComponent<Renderer>().material.mainTexture = tex;
     }
 
     void Update() {
+        if (curInterval++ < interval) return;
+        curInterval = 0;
         if (HandJointUtils.TryGetJointPose(TrackedHandJoint.IndexKnuckle, leftHanded ? Handedness.Left : Handedness.Right, out MixedRealityPose po1) &&
             HandJointUtils.TryGetJointPose(TrackedHandJoint.IndexTip, leftHanded ? Handedness.Left : Handedness.Right, out MixedRealityPose po2) &&
             HandJointUtils.TryGetJointPose(TrackedHandJoint.PinkyKnuckle, leftHanded ? Handedness.Left : Handedness.Right, out MixedRealityPose po3)) {

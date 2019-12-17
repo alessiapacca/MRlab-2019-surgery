@@ -34,7 +34,7 @@ public class AdjustBoneColor : MonoBehaviour
     private Material _material;
     private Material _adjustedMaterial;
 
-    private ColorMode mode;
+    private ColorState mode;
 
     void Start()
     {
@@ -53,10 +53,10 @@ public class AdjustBoneColor : MonoBehaviour
 
     void Update()
     {
-        mode = GlobalController.gColorMode;
+        mode = GlobalController.gColorState;
         magnitude = (maxOpacity - minOpacity) * 0.5f;
 
-        if (mode == ColorMode.Edit)
+        if (mode == ColorState.Edit)
         {
             // In edit-color mode, change opacity
             if (onHold)
@@ -85,7 +85,7 @@ public class AdjustBoneColor : MonoBehaviour
     public void OnSelect()
     {
         onHold = true;
-        if (mode == ColorMode.Edit)
+        if (mode == ColorState.Edit)
         {
             holdBeginTime = Time.time;
             holdBeginAlpha = _material.GetColor(_ColorID).a;
@@ -102,7 +102,7 @@ public class AdjustBoneColor : MonoBehaviour
     public void ExitSelect()
     {
         onHold = false;
-        if (mode == ColorMode.Edit)
+        if (mode == ColorState.Edit)
         {
 
         }

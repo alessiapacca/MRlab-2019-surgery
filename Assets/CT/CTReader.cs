@@ -14,8 +14,8 @@ public class CTReader : MonoBehaviour {
     void Start() {
         var nrrd = new NRRD(ct);
 
-        GetComponent<Transform>().localPosition = nrrd.origin;
-        GetComponent<Transform>().localScale = Vector3.Scale(nrrd.scale, new Vector3(nrrd.dims[0], nrrd.dims[1], nrrd.dims[2]));
+        //GetComponent<Transform>().localPosition = nrrd.origin;
+        //GetComponent<Transform>().localScale = Vector3.Scale(nrrd.scale, new Vector3(nrrd.dims[0], nrrd.dims[1], nrrd.dims[2]));
 
         kernel = slicer.FindKernel("CSMain");
         var buf = new ComputeBuffer(nrrd.data.Length, sizeof(float));
