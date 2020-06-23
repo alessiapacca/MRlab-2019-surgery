@@ -1,14 +1,48 @@
 # MRlab-2019-surgery
+<p align="center">
+<img src="https://github.com/alessiapacca/MRlab-2019-surgery/blob/master/imgs/MRTK_Logo.png" width="71%"/>
+</p>
 
-A collaboration of Surgery Assistant Project, using Microsoft Hololens 2 and mixed reality tools.
+## Project Description
+Nowadays, surgeons operate complex fracture surgeries without being able to properly manipulate data during the procedures because of sterilization issues. Oftentimes, they need multiple assistants who will go through the data and tell/show them the relevant pieces of information throughout the surgery. This process is both inefficient and cumbersome as it detaches the surgeon from the actual data and wastes human resources: doctors and nurses who have to assist with data manipulation and who could otherwise be helping more objectively.<br>
+This application aims to assist surgeons in fracture surgeries (and potentially in other procedures) by providing an intuitive and non-contaminant method for accessing and manipulating medical data through the **Microsoft Hololens 2 device**. Therefore, human resources can be better managed and surgeries can be performed more efficiently.
 
-Project Owners ~add last names~: 
+Project Collaborators: 
+* A. Klaeger
+* A. Paccagnella
+* J. Lehner
+* L. Albuquerque
+* Y. Zhou
 
-* Adrian
-* Alessia
-* Jonathan
-* Leonardo
-* Yang
+## Demo gifs
+<p align="center">
+<img src="https://github.com/alessiapacca/MRlab-2019-surgery/blob/master/imgs/video.gif" width="71%"/>
+</p>
+
+<p align="center">
+<img src="https://github.com/alessiapacca/MRlab-2019-surgery/blob/master/imgs/video3.gif"/>
+</p>
+
+<p align="center">
+<img src="https://github.com/alessiapacca/MRlab-2019-surgery/blob/master/imgs/video2.gif"/>
+</p>
+
+## Functionalities
+### Hide adjustment
+This function, that can be found on the menu, allows to exclude (and alternatively include) the adjusted bone mesh in the view.
+
+### Translate and rotate the bone and his fragments
+The bone can be grabbed, translated and rotated in the scene with only two fingers. It can also be decomposed into his small fragments parts. A menu button can then reset the initial position of the object. 
+
+### Edit opacity
+Another function that we implemented was the ability to change the transparency level of the object when needed to be hidden. This enables to have a better visualization of specific parts of the fracture without loosing track of the momentarily ”unimportant” ones. The initial opacity can be restored through a menu button.
+
+### CT Scans
+A core novel functionality of the App is the display of CT Scans in the Mixed Reality environment. This also represented the biggest technical challenge of the project, as a CT consists of large amount of 3D data, which needs to be processed in real time on the limited hardware of the Hololens.
+
+### Slicing
+This function can be used to request a render of a specific cross-sectional image (slice) of the bone. This can be done by sliding two axis-aligned planes directly on the bone, or directly with the hand. Indeed, any arbitrary slice can be requested with any orientation - even sheared/skewed slices if desired. The CTReader then renders the specified slice using a high speed compute shader running on the GPU hardware of the Hololens, using either a nearest-neighbor or a trilinear interpolation approach.
+
 
 ## Log of progress
 
@@ -42,6 +76,5 @@ Once the deployment complete, the hololens may automatically start that applicat
 
 ### Adding MRTK functions 
 
-Going through the [MRTK tutorial](https://microsoft.github.io/MixedRealityToolkit-Unity/README.html). We ~currently~ added some control scripts to the bones, in order to enable dragging, scaling functions, and it works.
+Going through the [MRTK tutorial](https://microsoft.github.io/MixedRealityToolkit-Unity/README.html). We added some control scripts to the bones, in order to enable dragging, scaling functions, and it works.
 
-More logs should come up then...
