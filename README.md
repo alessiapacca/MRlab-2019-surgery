@@ -29,7 +29,7 @@ Project Collaborators:
 
 ## Functionalities
 ### Hide adjustment
-This function, that can be found on the menu, allows for excluding (and alternatively including) the adjusted bone mesh from the view.
+This function, that can be found on the menu, allows to exclude (and alternatively include) the adjusted bone mesh in the view.
 
 ### Translate and rotate the bone and his fragments
 The bone can be grabbed, translated and rotated in the scene with only two fingers. It can also be decomposed into his small fragments parts. A menu button can then reset the initial position of the object. 
@@ -41,7 +41,7 @@ Another function that we implemented was the ability to change the transparency 
 A core novel functionality of the App is the display of CT Scans in the Mixed Reality environment. This also represented the biggest technical challenge of the project, as a CT consists of large amount of 3D data, which needs to be processed in real time on the limited hardware of the Hololens.
 
 ### Slicing
-This function can be used to request a render of a specific cross-sectional image (slice) of the bone. This can be done by sliding two axis-aligned planes directly on the bone, ora directly with the hand. Indeed, any arbitrary slice can be requested with any orientation - even sheared/skewed slices if desired. The CTReader then renders the specified slice using a high speed compute shader running on the GPU hardware of the Hololens, using either a nearest-neighbor or a trilinear interpolation approach.
+This function can be used to request a render of a specific cross-sectional image (slice) of the bone. This can be done by sliding two axis-aligned planes directly on the bone, or directly with the hand. Indeed, any arbitrary slice can be requested with any orientation - even sheared/skewed slices if desired. The CTReader then renders the specified slice using a high speed compute shader running on the GPU hardware of the Hololens, using either a nearest-neighbor or a trilinear interpolation approach.
 
 
 ## Log of progress
